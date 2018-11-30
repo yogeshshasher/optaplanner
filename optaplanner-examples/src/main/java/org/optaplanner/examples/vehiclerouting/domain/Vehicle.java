@@ -86,4 +86,9 @@ public class Vehicle extends AbstractPersistable implements Standstill {
         return location.getName() + "/" + super.toString();
     }
 
+
+    public int giveValidNum(long value) {
+        return (int) (-1 * (value / 1000));
+    }
+
 }
