@@ -49,14 +49,14 @@ rule "vehicleCapacity"
 end
 
 // Total Time taken should be lesser than 3 * 1000 * (5108.773 secs / 85 mins) = 15326319
-// , $previousStandstill: previousStandstill, $myLocation: location
+// Total Time taken should be lesser than 2 * 1000 * (5108.773 secs / 85 mins) = 10217546
 rule "limitTravelTimeAmongstUsers"
     when
         $vehicle : Vehicle($capacity : capacity)
         accumulate(
             Customer(vehicle == $vehicle, $distanceFromPreviousStandstill : distanceFromPreviousStandstill);
             $timeTaken : sum($distanceFromPreviousStandstill);
-            $timeTaken > 15326319
+            $timeTaken > 10217546
         )
     then
         scoreHolder.addHardConstraintMatch(kcontext, $vehicle.giveValidNum($timeTaken));
@@ -70,7 +70,7 @@ rule "minimizeDistanceAmongstUsers"
     when
         $customer : Customer(previousStandstill != null, $distanceFromPreviousStandstill : distanceFromPreviousStandstill)
     then
-        scoreHolder.addHardConstraintMatch(kcontext, - $customer.getDistanceFromPreviousStandstill());
+        scoreHolder.addSoftConstraintMatch(kcontext, - $customer.getDistanceFromPreviousStandstill());
 end
 
 /*
