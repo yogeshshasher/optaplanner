@@ -86,8 +86,26 @@ public class Vehicle extends AbstractPersistable implements Standstill {
         return location.getName() + "/" + super.toString();
     }
 
+    public String getDistanceUnitOfMeasurement() {
+        return this.depot.getDistanceUnitOfMeasurement();
+    }
 
-    public int giveValidNum(long value) {
+    public int getLimitAccordingToMeasurementUnit() {
+
+        switch (this.getDistanceUnitOfMeasurement()){
+            case "sec":
+                // Total Time taken should be lesser than 3 * 1000 * (5108.773 secs / 85 mins) = 15326319
+                return 15326319;
+            case "km":
+                // Total Time taken should be lesser than 2 * 1000 * (150 kms) = 300,000
+                return 300 * 1000;
+            default:
+                return 0;
+        }
+    }
+
+
+    public int getIntegerConformable(long value) {
         return (int) (-1 * (value / 1000));
     }
 

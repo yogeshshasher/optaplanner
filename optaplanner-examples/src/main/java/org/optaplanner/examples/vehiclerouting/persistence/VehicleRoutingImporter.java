@@ -309,6 +309,8 @@ public class VehicleRoutingImporter extends AbstractTxtSolutionImporter<VehicleR
                                 + ") has no location (" + location + ").");
                     }
                     depot.setLocation(location);
+
+                    depot.setDistanceUnitOfMeasurement(solution.getDistanceUnitOfMeasurement());
                     if (timewindowed) {
                         TimeWindowedDepot timeWindowedDepot = (TimeWindowedDepot) depot;
                         timeWindowedDepot.setReadyTime(Long.parseLong(lineTokens[2]));

@@ -48,18 +48,20 @@ rule "vehicleCapacity"
         scoreHolder.addHardConstraintMatch(kcontext, $capacity - $demandTotal);
 end
 
-// Total Time taken should be lesser than 3 * 1000 * (5108.773 secs / 85 mins) = 15326319
-// Total Time taken should be lesser than 2 * 1000 * (5108.773 secs / 85 mins) = 10217546
 rule "limitTravelTimeAmongstUsers"
     when
         $vehicle : Vehicle($capacity : capacity)
         accumulate(
             Customer(vehicle == $vehicle, $distanceFromPreviousStandstill : distanceFromPreviousStandstill);
             $timeTaken : sum($distanceFromPreviousStandstill);
-            $timeTaken > 10217546
+            $timeTaken > $vehicle.getLimitAccordingToMeasurementUnit()
         )
     then
-        scoreHolder.addHardConstraintMatch(kcontext, $vehicle.giveValidNum($timeTaken));
+
+        System.out.print("$pickUpRestrictionLimit: ");
+        System.out.print($vehicle.getLimitAccordingToMeasurementUnit());
+        System.out.println($vehicle.getDistanceUnitOfMeasurement());
+        scoreHolder.addHardConstraintMatch(kcontext, $vehicle.getIntegerConformable($timeTaken));
 end
 
 

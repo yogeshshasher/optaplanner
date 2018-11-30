@@ -29,6 +29,15 @@ import org.optaplanner.examples.vehiclerouting.domain.timewindowed.TimeWindowedD
 public class Depot extends AbstractPersistable {
 
     protected Location location;
+    protected String distanceUnitOfMeasurement;
+
+    public String getDistanceUnitOfMeasurement() {
+        return distanceUnitOfMeasurement;
+    }
+
+    public void setDistanceUnitOfMeasurement(String distanceUnitOfMeasurement) {
+        this.distanceUnitOfMeasurement = distanceUnitOfMeasurement;
+    }
 
     public Location getLocation() {
         return location;
