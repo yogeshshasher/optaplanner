@@ -77,6 +77,8 @@ public abstract class Location extends AbstractPersistable {
      */
     public abstract long getDistanceTo(Location location);
 
+    public abstract long getTravellingTimeTo(Location location);
+
     public double getAirDistanceDoubleTo(Location location) {
         // Implementation specified by TSPLIB http://www2.iwr.uni-heidelberg.de/groups/comopt/software/TSPLIB95/
         // Euclidean distance (Pythagorean theorem) - not correct when the surface is a sphere

@@ -31,10 +31,7 @@ import org.optaplanner.examples.vehiclerouting.domain.Customer;
 import org.optaplanner.examples.vehiclerouting.domain.Depot;
 import org.optaplanner.examples.vehiclerouting.domain.Vehicle;
 import org.optaplanner.examples.vehiclerouting.domain.VehicleRoutingSolution;
-import org.optaplanner.examples.vehiclerouting.domain.location.AirLocation;
-import org.optaplanner.examples.vehiclerouting.domain.location.DistanceType;
-import org.optaplanner.examples.vehiclerouting.domain.location.Location;
-import org.optaplanner.examples.vehiclerouting.domain.location.RoadLocation;
+import org.optaplanner.examples.vehiclerouting.domain.location.*;
 import org.optaplanner.examples.vehiclerouting.domain.location.segmented.HubSegmentLocation;
 import org.optaplanner.examples.vehiclerouting.domain.location.segmented.RoadSegmentLocation;
 import org.optaplanner.examples.vehiclerouting.domain.timewindowed.TimeWindowedCustomer;
@@ -71,9 +68,11 @@ public class VehicleRoutingImporter extends AbstractTxtSolutionImporter<VehicleR
         private VehicleRoutingSolution solution;
 
         private boolean timewindowed;
+        private boolean isForMultipleMetrics;
         private int customerListSize;
         private int vehicleListSize;
         private int capacity;
+        private String edgeWeightLabel;
         private Map<Long, Location> locationMap;
         private List<Depot> depotList;
 
@@ -120,6 +119,8 @@ public class VehicleRoutingImporter extends AbstractTxtSolutionImporter<VehicleR
         // ************************************************************************
 
         public void readVrpWebFormat() throws IOException {
+            edgeWeightLabel = "EDGE_WEIGHT_SECTION";
+            isForMultipleMetrics = false;
             readVrpWebHeaders();
             readVrpWebLocationList();
             readVrpWebCustomerList();
@@ -167,6 +168,9 @@ public class VehicleRoutingImporter extends AbstractTxtSolutionImporter<VehicleR
             }
             solution.setDistanceUnitOfMeasurement(readOptionalStringValue("EDGE_WEIGHT_UNIT_OF_MEASUREMENT *:", "distance"));
             capacity = readIntegerValue("CAPACITY *:");
+
+            isForMultipleMetrics = Boolean
+                    .parseBoolean(readOptionalStringValue("IS_FOR_MULTIPLE_METRICS *:", "false"));
         }
 
         private void readVrpWebLocationList() throws IOException {
@@ -222,25 +226,70 @@ public class VehicleRoutingImporter extends AbstractTxtSolutionImporter<VehicleR
                 locationMap.put(location.getId(), location);
             }
             if (distanceType == DistanceType.ROAD_DISTANCE) {
-                readConstantLine("EDGE_WEIGHT_SECTION");
-                for (int i = 0; i < customerListSize; i++) {
-                    RoadLocation location = (RoadLocation) customerLocationList.get(i);
-                    Map<RoadLocation, Double> travelDistanceMap = new LinkedHashMap<>(customerListSize);
-                    String line = bufferedReader.readLine();
-                    String[] lineTokens = splitBySpacesOrTabs(line.trim(), customerListSize);
-                    for (int j = 0; j < customerListSize; j++) {
-                        double travelDistance = Double.parseDouble(lineTokens[j]);
-                        if (i == j) {
-                            if (travelDistance != 0.0) {
-                                throw new IllegalStateException("The travelDistance (" + travelDistance
-                                        + ") should be zero.");
+                if (!isForMultipleMetrics) {
+                    readConstantLine(edgeWeightLabel);
+                    for (int i = 0; i < customerListSize; i++) {
+                        RoadLocation location = (RoadLocation) customerLocationList.get(i);
+                        Map<RoadLocation, Double> travelDistanceMap = new LinkedHashMap<>(customerListSize);
+                        String line = bufferedReader.readLine();
+                        String[] lineTokens = splitBySpacesOrTabs(line.trim(), customerListSize);
+                        for (int j = 0; j < customerListSize; j++) {
+                            double travelDistance = Double.parseDouble(lineTokens[j]);
+                            if (i == j) {
+                                if (travelDistance != 0.0) {
+                                    throw new IllegalStateException("The travelDistance (" + travelDistance
+                                            + ") should be zero.");
+                                }
+                            } else {
+                                RoadLocation otherLocation = (RoadLocation) customerLocationList.get(j);
+                                travelDistanceMap.put(otherLocation, travelDistance);
                             }
-                        } else {
-                            RoadLocation otherLocation = (RoadLocation) customerLocationList.get(j);
-                            travelDistanceMap.put(otherLocation, travelDistance);
                         }
+                        location.setTravelDistanceMap(travelDistanceMap);
                     }
-                    location.setTravelDistanceMap(travelDistanceMap);
+                } else {
+                    readConstantLine(edgeWeightLabel + "_DISTANCE");
+                    for (int i = 0; i < customerListSize; i++) {
+                        RoadLocationMatrix location = (RoadLocationMatrix) customerLocationList.get(i);
+                        Map<RoadLocationMatrix, Double> travelDistanceMap = new LinkedHashMap<>(customerListSize);
+                        String line = bufferedReader.readLine();
+                        String[] lineTokens = splitBySpacesOrTabs(line.trim(), customerListSize);
+                        for (int j = 0; j < customerListSize; j++) {
+                            double travelDistance = Double.parseDouble(lineTokens[j]);
+                            if (i == j) {
+                                if (travelDistance != 0.0) {
+                                    throw new IllegalStateException("The travelDistance (" + travelDistance
+                                            + ") should be zero.");
+                                }
+                            } else {
+                                RoadLocationMatrix otherLocation = (RoadLocationMatrix) customerLocationList.get(j);
+                                travelDistanceMap.put(otherLocation, travelDistance);
+                            }
+                        }
+                        location.setTravelDistanceMap(travelDistanceMap);
+                    }
+
+
+                    readConstantLine(edgeWeightLabel + "_TIME");
+                    for (int i = 0; i < customerListSize; i++) {
+                        RoadLocationMatrix location = (RoadLocationMatrix) customerLocationList.get(i);
+                        Map<RoadLocationMatrix, Double> travelTimeMap = new LinkedHashMap<>(customerListSize);
+                        String line = bufferedReader.readLine();
+                        String[] lineTokens = splitBySpacesOrTabs(line.trim(), customerListSize);
+                        for (int j = 0; j < customerListSize; j++) {
+                            double travelDistance = Double.parseDouble(lineTokens[j]);
+                            if (i == j) {
+                                if (travelDistance != 0.0) {
+                                    throw new IllegalStateException("The travelTime (" + travelDistance
+                                            + ") should be zero.");
+                                }
+                            } else {
+                                RoadLocationMatrix otherLocation = (RoadLocationMatrix) customerLocationList.get(j);
+                                travelTimeMap.put(otherLocation, travelDistance);
+                            }
+                        }
+                        location.setTravelTimeMap(travelTimeMap);
+                    }
                 }
             }
             if (distanceType == DistanceType.SEGMENTED_ROAD_DISTANCE) {

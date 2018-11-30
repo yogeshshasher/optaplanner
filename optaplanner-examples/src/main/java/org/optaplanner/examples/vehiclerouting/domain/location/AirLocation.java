@@ -39,4 +39,9 @@ public class AirLocation extends Location {
         return (long) (distance * 1000.0 + 0.5);
     }
 
+    @Override
+    public long getTravellingTimeTo(Location location) {
+        return 0;
+    }
+
 }

@@ -24,6 +24,7 @@ import org.optaplanner.core.api.domain.variable.PlanningVariable;
 import org.optaplanner.core.api.domain.variable.PlanningVariableGraphType;
 import org.optaplanner.examples.common.domain.AbstractPersistable;
 import org.optaplanner.examples.vehiclerouting.domain.location.Location;
+import org.optaplanner.examples.vehiclerouting.domain.location.RoadLocationMatrix;
 import org.optaplanner.examples.vehiclerouting.domain.solver.DepotAngleCustomerDifficultyWeightFactory;
 import org.optaplanner.examples.vehiclerouting.domain.timewindowed.TimeWindowedCustomer;
 
@@ -106,12 +107,29 @@ public class Customer extends AbstractPersistable implements Standstill {
         return getDistanceFrom(previousStandstill);
     }
 
+    public long getTimeFromPreviousStandstill() {
+        if (previousStandstill == null) {
+            throw new IllegalStateException("This method must not be called when the previousStandstill ("
+                    + previousStandstill + ") is not initialized yet.");
+        }
+        return getTravellingTimeFrom(previousStandstill);
+    }
+
     /**
      * @param standstill never null
      * @return a positive number, the distance multiplied by 1000 to avoid floating point arithmetic rounding errors
      */
     public long getDistanceFrom(Standstill standstill) {
-        return standstill.getLocation().getDistanceTo(location);
+        Location loc = standstill.getLocation();
+        if (loc instanceof RoadLocationMatrix) {
+            return loc.getTravellingTimeTo(location);
+        } else {
+            return loc.getDistanceTo(location);
+        }
+    }
+
+    public long getTravellingTimeFrom(Standstill standstill) {
+        return standstill.getLocation().getTravellingTimeTo(location);
     }
 
     /**
@@ -119,7 +137,16 @@ public class Customer extends AbstractPersistable implements Standstill {
      * @return a positive number, the distance multiplied by 1000 to avoid floating point arithmetic rounding errors
      */
     public long getDistanceTo(Standstill standstill) {
-        return location.getDistanceTo(standstill.getLocation());
+
+        if (location instanceof RoadLocationMatrix) {
+            return location.getTravellingTimeTo(standstill.getLocation());
+        } else {
+            return location.getDistanceTo(standstill.getLocation());
+        }
+    }
+
+    public long getTravellingTimeTo(Standstill standstill) {
+        return location.getTravellingTimeTo(standstill.getLocation());
     }
 
     @Override

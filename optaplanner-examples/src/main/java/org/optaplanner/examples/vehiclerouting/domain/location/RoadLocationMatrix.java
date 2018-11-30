@@ -16,34 +16,39 @@
 
 package org.optaplanner.examples.vehiclerouting.domain.location;
 
-import java.util.Map;
-
 import com.thoughtworks.xstream.annotations.XStreamAlias;
+
+import java.util.Map;
 
 /**
  * The cost between 2 locations was precalculated on a real road network route.
  * The cost itself might be the distance in km, the travel time, the fuel usage or a weighted function of any of those.
  * Used with {@link DistanceType#ROAD_DISTANCE}.
  */
-@XStreamAlias("VrpRoadLocation")
-public class RoadLocation extends Location {
+@XStreamAlias("VrpRoadLocationMatrix")
+public class RoadLocationMatrix extends Location {
 
     // Prefer Map over array or List because customers might be added and removed in real-time planning.
-    protected Map<RoadLocation, Double> travelDistanceMap;
+    protected Map<RoadLocationMatrix, Double> travelDistanceMap;
+    protected Map<RoadLocationMatrix, Double> travelTimeMap;
 
-    public RoadLocation() {
+    public RoadLocationMatrix() {
     }
 
-    public RoadLocation(long id, double latitude, double longitude) {
+    public RoadLocationMatrix(long id, double latitude, double longitude) {
         super(id, latitude, longitude);
     }
 
-    public Map<RoadLocation, Double> getTravelDistanceMap() {
+    public Map<RoadLocationMatrix, Double> getTravelDistanceMap() {
         return travelDistanceMap;
     }
 
-    public void setTravelDistanceMap(Map<RoadLocation, Double> travelDistanceMap) {
+    public void setTravelDistanceMap(Map<RoadLocationMatrix, Double> travelDistanceMap) {
         this.travelDistanceMap = travelDistanceMap;
+    }
+
+    public void setTravelTimeMap(Map<RoadLocationMatrix, Double> travelTimeMap) {
+        this.travelTimeMap = travelTimeMap;
     }
 
     @Override
@@ -51,14 +56,19 @@ public class RoadLocation extends Location {
         if (this == location) {
             return 0L;
         }
-        double distance = travelDistanceMap.get((RoadLocation) location);
+        double distance = travelDistanceMap.get((RoadLocationMatrix) location);
         // Multiplied by 1000 to avoid floating point arithmetic rounding errors
         return (long) (distance * 1000.0 + 0.5);
     }
 
     @Override
     public long getTravellingTimeTo(Location location) {
-        return 0;
+        if (this == location) {
+            return 0L;
+        }
+        double timeTaken = travelTimeMap.get((RoadLocationMatrix) location);
+        // Multiplied by 1000 to avoid floating point arithmetic rounding errors
+        return (long) (timeTaken * 1000.0 + 0.5);
     }
 
 }

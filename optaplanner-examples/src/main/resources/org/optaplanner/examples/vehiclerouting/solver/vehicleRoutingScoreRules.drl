@@ -52,18 +52,25 @@ rule "limitTravelTimeAmongstUsers"
     when
         $vehicle : Vehicle($capacity : capacity)
         accumulate(
-            Customer(vehicle == $vehicle, $distanceFromPreviousStandstill : distanceFromPreviousStandstill);
-            $timeTaken : sum($distanceFromPreviousStandstill);
+            Customer(vehicle == $vehicle, $timeFromPreviousStandstill : distanceFromPreviousStandstill);
+            $timeTaken : sum($timeFromPreviousStandstill);
             $timeTaken > $vehicle.getLimitAccordingToMeasurementUnit()
         )
     then
-
-        System.out.print("$pickUpRestrictionLimit: ");
-        System.out.print($vehicle.getLimitAccordingToMeasurementUnit());
-        System.out.println($vehicle.getDistanceUnitOfMeasurement());
-        scoreHolder.addHardConstraintMatch(kcontext, $vehicle.getIntegerConformable($timeTaken));
+        scoreHolder.addHardConstraintMatch(kcontext, - $vehicle.getIntegerConformable($timeTaken));
 end
 
+rule "limitDistanceTravelledAmongstUsers"
+    when
+        $vehicle : Vehicle($capacity : capacity)
+        accumulate(
+            Customer(vehicle == $vehicle, $distanceFromPreviousStandstill : distanceFromPreviousStandstill);
+            $totalDistanceTravelled : sum($distanceFromPreviousStandstill);
+            $totalDistanceTravelled > $vehicle.getLimitAccordingToMeasurementUnit()
+        )
+    then
+        scoreHolder.addHardConstraintMatch(kcontext, - $vehicle.getIntegerConformable($totalDistanceTravelled));
+end
 
 // ############################################################################
 // Medium constraints
